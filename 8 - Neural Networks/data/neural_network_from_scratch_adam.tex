@@ -1,0 +1,237 @@
+
+\documentclass[11pt]{article}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{setspace}
+\usepackage{hyperref}
+
+\title{Neural Networks From Scratch \\
+Forward Pass, Backpropagation, and Adam Optimizer}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\doublespacing
+
+\section{Problem Setup}
+
+We consider a binary classification problem with a single data point.
+
+\subsection{Input}
+\[
+\mathbf{x} =
+\begin{bmatrix}
+x_1 \\
+x_2
+\end{bmatrix}
+=
+\begin{bmatrix}
+1 \\
+2
+\end{bmatrix}
+\]
+
+\subsection{Architecture}
+\begin{itemize}
+\item One hidden layer with one neuron
+\item Hidden activation: Leaky ReLU
+\item Output activation: Sigmoid
+\item Loss function: Binary Cross Entropy
+\end{itemize}
+
+\subsection{Parameters}
+
+Hidden layer:
+\[
+\mathbf{w}_1 =
+\begin{bmatrix}
+0.5 \\
+-1
+\end{bmatrix},
+\quad b_1 = 0
+\]
+
+Output layer:
+\[
+w_2 = 2, \quad b_2 = 0
+\]
+
+Label:
+\[
+y = 1
+\]
+
+\section{Forward Pass}
+
+\subsection{Hidden Layer Linear Transformation}
+
+\[
+z_1 = \mathbf{w}_1^T \mathbf{x} + b_1
+\]
+
+\[
+z_1 = (0.5)(1) + (-1)(2) = -1.5
+\]
+
+\subsection{Leaky ReLU Activation}
+
+Leaky ReLU is defined as:
+\[
+\text{LeakyReLU}(z) =
+\begin{cases}
+z & z > 0 \\
+\alpha z & z \le 0
+\end{cases}
+\]
+
+with $\alpha = 0.01$.
+
+\[
+a_1 = 0.01 \cdot (-1.5) = -0.015
+\]
+
+\subsection{Output Layer}
+
+\[
+z_2 = w_2 a_1 + b_2 = 2 \cdot (-0.015) = -0.03
+\]
+
+\subsection{Sigmoid Activation}
+
+\[
+\hat{y} = \sigma(z_2) = \frac{1}{1 + e^{-z_2}} \approx 0.4925
+\]
+
+\section{Loss Function}
+
+Binary Cross Entropy:
+\[
+L = -\left[y \log(\hat{y}) + (1 - y)\log(1 - \hat{y})\right]
+\]
+
+For $y = 1$:
+\[
+L = -\log(0.4925) \approx 0.708
+\]
+
+\section{Backpropagation}
+
+\subsection{Gradient w.r.t. Output Pre-activation}
+
+For sigmoid + BCE:
+\[
+\frac{\partial L}{\partial z_2} = \hat{y} - y
+\]
+
+\[
+\frac{\partial L}{\partial z_2} = 0.4925 - 1 = -0.5075
+\]
+
+\subsection{Gradient w.r.t. Output Weight}
+
+\[
+\frac{\partial L}{\partial w_2}
+=
+\frac{\partial L}{\partial z_2}
+\cdot
+\frac{\partial z_2}{\partial w_2}
+=
+(-0.5075)(-0.015) = 0.00761
+\]
+
+\subsection{Gradient w.r.t. Hidden Activation}
+
+\[
+\frac{\partial L}{\partial a_1}
+=
+\frac{\partial L}{\partial z_2} \cdot w_2
+=
+(-0.5075)(2) = -1.015
+\]
+
+\subsection{Gradient through Leaky ReLU}
+
+Since $z_1 < 0$:
+\[
+\frac{\partial a_1}{\partial z_1} = 0.01
+\]
+
+\[
+\frac{\partial L}{\partial z_1}
+=
+(-1.015)(0.01) = -0.01015
+\]
+
+\subsection{Gradients w.r.t Hidden Weights}
+
+\[
+\frac{\partial L}{\partial \mathbf{w}_1}
+=
+\frac{\partial L}{\partial z_1} \mathbf{x}
+=
+-0.01015
+\begin{bmatrix}
+1 \\
+2
+\end{bmatrix}
+=
+\begin{bmatrix}
+-0.01015 \\
+-0.0203
+\end{bmatrix}
+\]
+
+\section{Adam Optimizer}
+
+Adam maintains two moving averages for each parameter.
+
+\subsection{Hyperparameters}
+
+\[
+\beta_1 = 0.9,\quad \beta_2 = 0.999,\quad \alpha = 0.001,\quad \epsilon = 10^{-8}
+\]
+
+\subsection{Moment Updates}
+
+First moment:
+\[
+m_t = \beta_1 m_{t-1} + (1-\beta_1) g_t
+\]
+
+Second moment:
+\[
+v_t = \beta_2 v_{t-1} + (1-\beta_2) g_t^2
+\]
+
+Bias correction:
+\[
+\hat{m}_t = \frac{m_t}{1-\beta_1^t}, \quad
+\hat{v}_t = \frac{v_t}{1-\beta_2^t}
+\]
+
+\subsection{Parameter Update}
+
+\[
+\theta_t = \theta_{t-1}
+- \alpha \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}
+\]
+
+\section{Conceptual Separation}
+
+\begin{itemize}
+\item Loss defines what is wrong
+\item Backprop defines who is responsible
+\item Adam defines how aggressively parameters are updated
+\end{itemize}
+
+\section{Conclusion}
+
+This document demonstrates a complete neural network training step from scratch:
+forward pass, loss computation, backpropagation using the chain rule, and parameter
+updates using the Adam optimizer.
+
+No frameworks. No abstractions. Only math.
+
+\end{document}
